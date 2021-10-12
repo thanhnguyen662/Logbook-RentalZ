@@ -63,6 +63,7 @@ const Form = () => {
          .integer('Rental Price must be Integer')
          .moreThan(0, 'Price must be greater than 0')
          .required('Price is required'),
+      note: yup.string().max(500, 'Note must be less than 500 characters'),
    });
 
    const onConfirm = (data) => {
@@ -359,7 +360,12 @@ const Form = () => {
                                  </FormControl.ErrorMessage>
                               </FormControl>
 
-                              <FormControl>
+                              <FormControl
+                                 isRequired
+                                 isInvalid={
+                                    'note' in errors && 'note' in touched
+                                 }
+                              >
                                  <FormControl.Label>Note</FormControl.Label>
                                  <TextArea
                                     name='note'
@@ -369,6 +375,11 @@ const Form = () => {
                                     onChangeText={handleChange('note')}
                                     textAlignVertical='top'
                                  />
+                                 <FormControl.ErrorMessage
+                                    leftIcon={<WarningOutlineIcon size='xs' />}
+                                 >
+                                    {errors.note}
+                                 </FormControl.ErrorMessage>
                               </FormControl>
 
                               <Button
