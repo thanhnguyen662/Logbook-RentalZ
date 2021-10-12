@@ -15,6 +15,7 @@ const Datepicker = (props) => {
       error,
       touched,
       minimumDate,
+      maximumDate,
    } = props;
    const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
@@ -22,6 +23,16 @@ const Datepicker = (props) => {
       if (minimumDate) {
          return {
             minimumDate: new Date(minimumDate),
+         };
+      } else {
+         return;
+      }
+   };
+
+   const maximum = () => {
+      if (maximumDate) {
+         return {
+            maximumDate: new Date(maximumDate),
          };
       } else {
          return;
@@ -37,13 +48,16 @@ const Datepicker = (props) => {
             onBlur={onBlur}
          >
             <Text style={styles.dateValue}>
-               {value === ''
-                  ? 'Choose a date'
-                  : moment(value).format('MM-DD-YYYY')}
+               {value === '' ? (
+                  <Text color={'#A6A6A6'}>Choose a date</Text>
+               ) : (
+                  moment(value).format('MM-DD-YYYY')
+               )}
             </Text>
          </TouchableOpacity>
          <DateTimePickerModal
             {...minimum()}
+            {...maximum()}
             isVisible={isDatePickerVisible}
             mode='date'
             onConfirm={(e) => {

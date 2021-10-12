@@ -22,11 +22,9 @@ import { Formik } from 'formik';
 import Datepicker from '../components/Datepicker';
 import moment from 'moment';
 import axios from 'axios';
-import { useNavigation } from '@react-navigation/native';
 
 const Form = () => {
    const toast = useToast();
-   const navigation = useNavigation();
    const [data, setData] = useState({});
    const [showModal, setShowModal] = useState(false);
 
@@ -62,6 +60,7 @@ const Form = () => {
       bedRoom: yup.string().required('Bed Room is required'),
       rentPrice: yup
          .number()
+         .integer('Rental Price must be Integer')
          .moreThan(0, 'Price must be greater than 0')
          .required('Price is required'),
    });
@@ -76,21 +75,26 @@ const Form = () => {
       return false;
    };
 
-   const handleOnOk = async () => {
-      const response = await axios.post(
-         'http://192.168.0.113:8000/rental/create',
-         data,
-      );
-      toast.show({
-         description: response.data.message,
-         placement: 'top',
-         backgroundColor:
-            response.data.message === 'Created success'
-               ? 'blue.700'
-               : 'red.600',
-      });
-      if (response.data.message === 'Created success') {
-         setShowModal(false);
+   const handleOnOk = async (resetForm) => {
+      try {
+         const response = await axios.post(
+            'http://192.168.0.113:8000/rental/create',
+            data,
+         );
+         toast.show({
+            description: response.data.message,
+            placement: 'top',
+            backgroundColor:
+               response.data.message === 'Created success'
+                  ? 'blue.700'
+                  : 'red.600',
+         });
+         if (response.data.message === 'Created success') {
+            setShowModal(false);
+            resetForm();
+         }
+      } catch (error) {
+         console.log(error);
       }
    };
 
@@ -119,6 +123,7 @@ const Form = () => {
                         handleChange,
                         handleSubmit,
                         setFieldValue,
+                        resetForm,
                      }) => (
                         <>
                            <VStack space={4}>
@@ -183,6 +188,11 @@ const Form = () => {
                                        error={errors.startDate}
                                        touched={touched.startDate}
                                        minimumDate={new Date()}
+                                       maximumDate={
+                                          values.endDate !== null
+                                             ? values.endDate
+                                             : null
+                                       }
                                     />
                                     <FormControl.ErrorMessage
                                        leftIcon={
@@ -340,7 +350,7 @@ const Form = () => {
                                     value={values.rentPrice}
                                     onBlur={handleBlur('rentPrice')}
                                     onChangeText={handleChange('rentPrice')}
-                                    keyboardType='numeric'
+                                    keyboardType='number-pad'
                                  />
                                  <FormControl.ErrorMessage
                                     leftIcon={<WarningOutlineIcon size='xs' />}
@@ -368,6 +378,84 @@ const Form = () => {
                               >
                                  Submit
                               </Button>
+
+                              <Modal
+                                 isOpen={showModal}
+                                 onClose={() => setShowModal(false)}
+                                 size='lg'
+                              >
+                                 <Modal.Content maxWidth='250'>
+                                    <Modal.CloseButton />
+                                    <Modal.Header>Confirm?</Modal.Header>
+                                    <Modal.Body>
+                                       <VStack space={3}>
+                                          {Object.entries(data).map((item) => {
+                                             if (item[1] === '') return;
+                                             const nameFunc = () => {
+                                                if (item[0] === 'name')
+                                                   return 'Name';
+                                                if (item[0] === 'address')
+                                                   return 'Address';
+                                                if (item[0] === 'startDate')
+                                                   return 'Start Date';
+                                                if (item[0] === 'endDate')
+                                                   return 'End Date';
+                                                if (item[0] === 'propertyType')
+                                                   return 'Property Type';
+                                                if (item[0] === 'furnitureType')
+                                                   return 'Furniture Type';
+                                                if (item[0] === 'bedRoom')
+                                                   return 'Bed Room';
+                                                if (item[0] === 'rentPrice')
+                                                   return 'Rent Price';
+                                                if (item[0] === 'note')
+                                                   return 'Note';
+                                             };
+                                             return (
+                                                <HStack
+                                                   alignItems='center'
+                                                   justifyContent='space-between'
+                                                   key={item[0]}
+                                                >
+                                                   <Text fontWeight='bold'>
+                                                      {nameFunc()}
+                                                   </Text>
+                                                   <Text color='blueGray.400'>
+                                                      {typeof item[1] ===
+                                                      'string'
+                                                         ? item[1]
+                                                         : moment(
+                                                              item[1],
+                                                           ).format(
+                                                              'YYYY-MM-DD',
+                                                           )}
+                                                   </Text>
+                                                </HStack>
+                                             );
+                                          })}
+                                       </VStack>
+                                    </Modal.Body>
+                                    <Modal.Footer>
+                                       <HStack width='100%' space='3'>
+                                          <Button
+                                             flex='1'
+                                             onPress={() => setShowModal(false)}
+                                             colorScheme='danger'
+                                          >
+                                             Cancel
+                                          </Button>
+                                          <Button
+                                             flex='1'
+                                             onPress={() =>
+                                                handleOnOk(resetForm)
+                                             }
+                                          >
+                                             Submit
+                                          </Button>
+                                       </HStack>
+                                    </Modal.Footer>
+                                 </Modal.Content>
+                              </Modal>
                            </VStack>
                         </>
                      )}
@@ -375,56 +463,6 @@ const Form = () => {
                </View>
             </View>
          </ScrollView>
-
-         <Modal
-            isOpen={showModal}
-            onClose={() => setShowModal(false)}
-            size='lg'
-         >
-            <Modal.Content maxWidth='250'>
-               <Modal.CloseButton />
-               <Modal.Header>Order</Modal.Header>
-               <Modal.Body>
-                  <VStack space={3}>
-                     {Object.entries(data).map((item) => {
-                        if (item[1] === '') return;
-                        const nameFunc = () => {
-                           if (item[0] === 'name') return 'Name';
-                           if (item[0] === 'address') return 'Address';
-                           if (item[0] === 'startDate') return 'Start Date';
-                           if (item[0] === 'endDate') return 'End Date';
-                           if (item[0] === 'propertyType')
-                              return 'Property Type';
-                           if (item[0] === 'furnitureType')
-                              return 'Furniture Type';
-                           if (item[0] === 'bedRoom') return 'Bed Room';
-                           if (item[0] === 'rentPrice') return 'Rent Price';
-                           if (item[0] === 'note') return 'Note';
-                        };
-                        return (
-                           <HStack
-                              alignItems='center'
-                              justifyContent='space-between'
-                              key={item[0]}
-                           >
-                              <Text fontWeight='bold'>{nameFunc()}</Text>
-                              <Text color='blueGray.400'>
-                                 {typeof item[1] === 'string'
-                                    ? item[1]
-                                    : moment(item[1]).format('YYYY-MM-DD')}
-                              </Text>
-                           </HStack>
-                        );
-                     })}
-                  </VStack>
-               </Modal.Body>
-               <Modal.Footer>
-                  <Button flex='1' onPress={handleOnOk}>
-                     Continue
-                  </Button>
-               </Modal.Footer>
-            </Modal.Content>
-         </Modal>
       </>
    );
 };
