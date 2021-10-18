@@ -10,20 +10,11 @@ import {
    Center,
 } from 'native-base';
 import Sound from 'react-native-sound';
+import churchBell from '../asset/church-bell.mp3';
 
-let hello = new Sound(
-   'https://raw.githubusercontent.com/zmxv/react-native-sound-demo/master/advertising.mp3',
-   Sound.MAIN_BUNDLE,
-   (error) => {
-      if (error) {
-         console.log(error);
-      }
-   },
-);
-
-hello.play((success) => {
-   if (!success) {
-      console.log('Sound did not play');
+let hello = new Sound(churchBell, Sound.MAIN_BUNDLE, (error) => {
+   if (error) {
+      console.log(error);
    }
 });
 
